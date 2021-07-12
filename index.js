@@ -6,7 +6,8 @@ const session = require("express-session");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user");
-
+const { isLoggedIn } = require("./middleware");
+const flash = require('connect-flash')
 const dotenv = require("dotenv");
 dotenv.config({ path: "./.env" });
 
@@ -29,6 +30,8 @@ app.use(express.urlencoded({ extended: true }));
 
 //auth routes
 const authRoutes = require("./routes/auth");
+//Apis
+const postAPI = require("./routes/api/post")
 
 const PORT = process.env.PORT || 5000;
 
@@ -43,6 +46,8 @@ app.use(
     saveUninitialized: true,
   })
 );
+
+app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -51,9 +56,10 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.use(authRoutes);
+app.use(postAPI);
 
 app.listen(PORT, () => console.log(`PORT started at ${PORT}`));
 
-app.get("/", (req, res) => {
-  res.render("home");
+app.get("/",isLoggedIn, (req, res) => {
+    res.render("layouts/mainPage");
 });
